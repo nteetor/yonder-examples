@@ -1,45 +1,68 @@
-devtools::load_all("../../dull") #library(dull)
+library(yonder)
 
-# define UI ----
+# Define UI for app that draws a histogram ----
 ui <- container(
-  row(
-    col(
-      h2("Hello, dull!")
-    )
-  ),
-  row(
-    col(
-      default = 12,
-      md = 3,
-      h6("Number of bins:"),
-      rangeInput(
-        id = "bins",
-        min = 1,
-        max = 50,
-        default = 30,
-        context = "primary"
+
+  # App title ----
+  h2("Hello Shiny!"),
+
+  # Columns layout with input and output definitions ----
+  columns(
+
+    # Sidebar panel for inputs ----
+    column(
+      width = 4,
+
+      # Input: Slider for the number of bins ----
+      formGroup(
+        "Number of bins:",
+        rangeInput(
+          id = "bins",
+          min = 1,
+          max = 50,
+          value = 30
+        )
       )
+
     ),
-    col(
-      plotOutput("distPlot")
+
+    # Main panel for displaying outputs ----
+    column(
+
+      # Output: Histogram ----
+      plotOutput(outputId = "distPlot")
+
     )
   )
 )
 
+# Define server logic required to draw a histogram ----
 server <- function(input, output) {
+
+  # Histogram of the Old Faithful Geyser Data ----
+  # with requested number of bins
+  # This expression that generates a histogram is wrapped in a call
+  # to renderPlot to indicate that:
+  #
+  # 1. It is "reactive" and therefore should be automatically
+  #    re-executed when inputs (input$bins) change
+  # 2. Its output type is a plot
   output$distPlot <- renderPlot({
-    x    <- faithful$waiting
+
+    print(input$bins)
+
+    x <- faithful$waiting
     bins <- seq(min(x), max(x), length.out = input$bins + 1)
-    
+
     hist(
-      x, 
-      breaks = bins, 
-      col = "#75AADB", 
-      border = "white",
+      x, breaks = bins, col = "#75AADB", border = "white",
       xlab = "Waiting time to next eruption (in mins)",
       main = "Histogram of waiting times"
     )
+
   })
+
 }
 
+# Create Shiny app ----
 shinyApp(ui = ui, server = server)

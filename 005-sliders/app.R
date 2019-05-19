@@ -1,118 +1,86 @@
-library(dull)
-library(datasets)
+library(shiny)
 
-# notes ----
-# dull has broken out shiny's sliderInput into
-# three distinct inputs,
-#   - rangeInput
-#   - intervalInput
-#   - sliderInput
-# all are used in the example
+# Define UI for slider demo app ----
+ui <- fluidPage(
 
-# define ui ----
-ui <- container(
-  h3("Sliders"),
+  # App title ----
+  titlePanel("Sliders"),
 
-  row(
-    # column of inputs ----
-    # width of 5 for medium or bigger windows and
-    # full width otherwise
-    col(
-      default = 12,
-      md = 5,
-      
-      # range input (integers) ----
-      h6("Integer:"),
-      rangeInput(
-        id = "integer",
-        min = 0,
-        max = 1000,
-        default = 500
-      ),
+  # Sidebar layout with input and output definitions ----
+  sidebarLayout(
 
-      # range input (reals) ----
-      h6("Decimal:"),
-      rangeInput(
-        id = "decimal",
-        min = 0,
-        max = 1,
-        step = 0.1,
-        default = 0.5
-      ),
+    # Sidebar to demonstrate various slider options ----
+    sidebarPanel(
 
-      # interval input ----
-      h6("Interval:"),
-      intervalInput(
-        id = "interval",
-        min = 1,
-        max = 1000,
-        default = c(200, 500)
-      ),
+      # Input: Simple integer interval ----
+      sliderInput("integer", "Integer:",
+                  min = 0, max = 1000,
+                  value = 500),
 
-      # slider input ----
-      h6("Discrete:"),
-      sliderInput(
-        id = "discrete",
-        choices = c(
-          "disagree",
-          "somewhat disagree",
-          "neutral",
-          "somewhat agree",
-          "agree"
-        )
-      ),
+      # Input: Decimal interval with step value ----
+      sliderInput("decimal", "Decimal:",
+                  min = 0, max = 1,
+                  value = 0.5, step = 0.1),
 
-      # custom format input ----
-      h6("Custom format:"),
-      rangeInput(
-        id = "format",
-        min = 0,
-        max = 1000,
-        step = 50,
-        prefix = "$",
-        suffix = ".00"
-      )
-      
+      # Input: Specification of range within an interval ----
+      sliderInput("range", "Range:",
+                  min = 1, max = 1000,
+                  value = c(200,500)),
+
+      # Input: Custom currency format for with basic animation ----
+      sliderInput("format", "Custom Format:",
+                  min = 0, max = 10000,
+                  value = 0, step = 2500,
+                  pre = "$", sep = ",",
+                  animate = TRUE),
+
+      # Input: Animation with custom interval (in ms) ----
+      # to control speed, plus looping
+      sliderInput("animation", "Looping Animation:",
+                  min = 1, max = 2000,
+                  value = 1, step = 10,
+                  animate =
+                    animationOptions(interval = 300, loop = TRUE))
+
     ),
 
-    # column with output ----
-    col(
+    # Main panel for displaying outputs ----
+    mainPanel(
 
-      # table *thru*put ----
-      tableThruput("values")
-      
-    )      
+      # Output: Table summarizing the values entered ----
+      tableOutput("values")
+
+    )
   )
 )
 
-# define server ----
+# Define server logic for slider examples ----
 server <- function(input, output) {
 
-  # slider values reactive ----
-  sliderVals <- reactive({
+  # Reactive expression to create data frame of all input values ----
+  sliderValues <- reactive({
+
     data.frame(
-      Name = c(
-        "Integer", "Decimal", "Interval", "Discrete", "Custom format"
-      ),
-      Value = c(
-        input$integer, 
-        input$decimal,
-        
-        # !! interval input value ----
-        # interval inputs return a list of two elements `from` and `to`
-        paste(input$interval$from, input$interval$to),
-        
-        input$discrete,
-        input$format
-      ),
-      stringsAsFactors = FALSE
-    )
+      Name = c("Integer",
+               "Decimal",
+               "Range",
+               "Custom Format",
+               "Animation"),
+      Value = as.character(c(input$integer,
+                             input$decimal,
+                             paste(input$range, collapse = " "),
+                             input$format,
+                             input$animation)),
+      stringsAsFactors = FALSE)
+
   })
 
-  # render table ----
+  # Show the values in an HTML table ----
   output$values <- renderTable({
-    sliderVals()
+    sliderValues()
   })
+
 }
 
+# Create Shiny app ----
 shinyApp(ui, server)

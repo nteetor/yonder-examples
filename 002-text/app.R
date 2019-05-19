@@ -1,41 +1,53 @@
-library(shiny)
+library(yonder)
 
-# define a ui for the app ----
-# remember, apps will usually always begin with a call to `container()`
+# Define UI for dataset viewer app ----
 ui <- container(
-  row(
-    col(
-      "dull text"
-    )
-  ),
-  row(
-    col(
-      default = 12,
-      md = 3,
-      h6("Choose a dataset:"),
-      
-      # select input, choose a dataset ----
-      selectInput(
-        id = "dataset",
-        choices = c("rock", "pressure", "cars")
+
+  # App title ----
+  h2("Shiny Text"),
+
+  # Column layout with a input and output definitions ----
+  columns(
+
+    # Sidebar panel for inputs ----
+    column(
+      width = 4,
+
+      # Input: Selector for choosing dataset ----
+      formGroup(
+        "Choose a dataset:",
+        selectInput(
+          id = "dataset",
+          choices = c("rock", "pressure", "cars")
+        )
       ),
 
-      # number input, choose number of observations ----
+      # Input: Number entry for number of obs to view ----
       numberInput(
         id = "obs",
+        label = "Number of observations to view:",
         value = 10
       )
     ),
-    col(
+
+    # Main panel for displaying outputs ----
+    column(
+
+      # Output: Verbatim text for data summary ----
       verbatimTextOutput("summary"),
 
+      # Output: HTML table with requested number of observations ----
       tableOutput("view")
+
     )
   )
 )
 
+# Define server logic to summarize and view selected dataset ----
 server <- function(input, output) {
-  dataset <- reactive({
+
+  # Return the requested dataset ----
+  datasetInput <- reactive({
     switch(
       input$dataset,
       rock = rock,
@@ -44,14 +56,18 @@ server <- function(input, output) {
     )
   })
 
+  # Generate a summary of the dataset ----
   output$summary <- renderPrint({
-    summary(dataset())
+    dataset <- datasetInput()
+    summary(dataset)
   })
 
+  # Show the first "n" observations ----
   output$view <- renderTable({
-    head(dataset(), n = input$obs)
+    head(datasetInput(), n = input$obs)
   })
+
 }
 
-# create shiny app ----
+# Create Shiny app ----
 shinyApp(ui = ui, server = server)
